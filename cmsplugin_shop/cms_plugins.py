@@ -5,6 +5,7 @@ from shop.util.cart import get_or_create_cart
 from shop.models.productmodel import Product
 from shop.models.ordermodel import OrderItem
 from models import TopProducts
+from django.db.models import Count
 
 class CartCMSPlugin(CMSPluginBase):
     model = CMSPlugin
@@ -33,10 +34,30 @@ class TopProductsPlugin(CMSPluginBase):
     render_template = "top_products/plugins/top_products.html"
     
     def render(self, context, instance, placeholder):
-        OrderItem.objects.all().group_by('product_reference')
-	context.update({
+        """This is the main rendering function. We "simply" query the database
+        to get the top N products (as defined in the plugin instance), and pass
+        them to the context"""
+
+        top_products_data = OrderItem.objects.values(
+        'product_reference').annotate(
+        product_count=Count('product_reference')).order_by('product_count')[:instance.number_of_products]
+        
+        # The top_products_data result should be in the form:
+        # [{'product_reference': '<product_id>', 'product_count': <count>}, ...]
+        
+        top_products_list = []
+        for values in top_products_data:
+            prod = Product.objects.get(pk=values.get('product_reference'))
+            count = volues.get('product_count')
+            top_products_list.append({'object': prod, 'count' : count})
+        
+        # TODO: Cache top_products_list, invalidate on new order (or just
+        # periodically maybe, it's not critical). Should be cached per
+        # instance.number_of_products, obviously.
+
+        context.update({
             'instance': instance,
-            'products': instance.products.all(),
+            'products': top_products_list,
             'placeholder': placeholder,
         })
         return context
