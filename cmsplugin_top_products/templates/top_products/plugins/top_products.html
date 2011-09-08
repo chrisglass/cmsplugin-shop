@@ -1,0 +1,22 @@
+{% load i18n modulo thumbnail %}
+{% load currency %}
+<div class="teaser-container">
+	<h4>{% blocktrans %}Top {{ product_count }} products{% endblocktrans %}</h4>
+	{% for product in products %}
+		<p class="teaser-item {% cycle 'odd' 'even' %}">
+			<a href="{{ product.get_absolute_url }}" class="clearfix">
+				{% if product.images.all.0 %}
+				{% thumbnail product.images.all.0.image 65x65 upscale crop as image %}
+				<span class="img">
+					<img src="{{ image }}" alt="" />
+				</span>
+				{% endif %}
+				<span class="desc">
+					<span class="title">{{ product.name }}</span><br />
+					{{ product.short_description }}<br />
+					<strong>{{ product.unit_price|currency }}</strong>
+				</span>
+			</a>
+		</p>
+	{% endfor %}
+</div>
