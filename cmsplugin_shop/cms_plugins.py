@@ -48,7 +48,7 @@ class TopProductsPlugin(CMSPluginBase):
         top_products_list = []
         for values in top_products_data:
             prod = Product.objects.get(pk=values.get('product_reference'))
-            count = volues.get('product_count')
+            count = values.get('product_count')
             top_products_list.append({'object': prod, 'count' : count})
         
         # TODO: Cache top_products_list, invalidate on new order (or just
